@@ -129,6 +129,15 @@ WHERE
     (CHAR_LENGTH(`country_name`) - CHAR_LENGTH(REPLACE(LOWER(`country_name`), 'a', ''))) >= 3
 ORDER BY `iso_code`;
 
+-- Alternative solution
+SELECT 
+    `country_name`, `iso_code`
+FROM
+    `countries`
+WHERE
+    `country_name` LIKE '%a%a%a%'
+ORDER BY `iso_code`;
+
 -- 11. Mix of Peak and River Names
 -- Combine all peak names with all river names, so that the last letter of each peak name 
 -- is the same like the first letter of its corresponding river name. Display the peak 

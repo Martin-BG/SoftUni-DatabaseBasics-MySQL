@@ -1,3 +1,5 @@
+-- https://judge.softuni.bg/Contests/Practice/Index/286#0
+
 -- 01 - Create Database
 -- You now know how to create database using the GUI of the HeidiSQL. 
 -- Now it’s time to create it using SQL queries. In that task (and the several following it)
@@ -105,5 +107,170 @@ INSERT INTO `people`(`name`, `gender`, `birthdate`)
 		('Maria', 'f', '1985-10-15'),
 		('Pena', 2, '1986-10-15'),
 		('Tosho', 1, '1976-10-15');
-		
-		
+
+
+-- 08. Create Table Users
+-- Using SQL query create table users with columns:
+-- * id – unique number for every user. There will be no more than 2^63-1 users. (Auto incremented)
+-- * username – unique identifier of the user will be no more than 30 characters (non Unicode). (Required)
+-- * password – password will be no longer than 26 characters (non Unicode). (Required)
+-- * profile_picture – image with size up to 900 KB. 
+-- * last_login_time
+-- * is_deleted – shows if the user deleted his/her profile. Possible states are true or false.
+-- Make id primary key. 
+-- Populate the table with 5 records. 
+-- Submit your CREATE and INSERT statements
+
+CREATE TABLE `users` (
+    `id` BIGINT UNSIGNED PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT,
+    `username` VARCHAR(30) UNIQUE NOT NULL,
+    `password` VARCHAR(26) NOT NULL,
+    `profile_picture` BLOB,
+    `last_login_time` TIMESTAMP,
+    `is_deleted` BOOLEAN
+);
+
+INSERT INTO `users`
+	(`username`, `password`, `last_login_time`, `is_deleted`)
+VALUES 
+	('Gogo', 'spojpe', NOW(), TRUE),
+	('Bobo', 'epgojro', NOW(), FALSE),
+	('Ani', 'rpker', NOW(), TRUE),
+	('Sasho', 'rgpjrpe', NOW(), TRUE),
+	('Gery', 'pkptkh',NULL, FALSE);
+
+
+-- 09. Change Primary Key
+-- Using SQL queries modify table users from the previous task. 
+-- First remove current primary key then create new primary key 
+-- that would be combination of fields id and username. 
+-- The initial primary key name on id is pk_users
+
+ALTER TABLE `users` 
+	DROP PRIMARY KEY,
+    ADD CONSTRAINT `pk_users` PRIMARY KEY (`id`, `username`);
+
+
+-- 10. Set Default Value of a Field
+-- Using SQL queries modify table users. Make the default 
+-- value of last_login_time field to be the current time.
+
+ALTER TABLE `users` 
+	MODIFY COLUMN `last_login_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP; -- now()
+    
+ALTER TABLE `users`
+	CHANGE COLUMN `last_login_time` `last_login_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+
+-- 11. Set Unique Field
+-- Using SQL queries modify table users. Remove username field from
+-- the primary key so only the field id would be primary key. 
+-- Now add unique constraint to the username field. 
+-- The initial primary key name on (id, username) is pk_users.
+
+ALTER TABLE `users`
+	DROP PRIMARY KEY,
+    ADD CONSTRAINT PRIMARY KEY (`id`),
+    ADD CONSTRAINT UNIQUE (`username`);
+    
+
+-- 12. Movies Database
+-- Using SQL queries create Movies database with the following entities:
+-- * directors (id, director_name, notes) 
+-- * genres (id, genre_name, notes) 
+-- * categories (id, category_name, notes)  
+-- * movies (id, title, director_id, copyright_year, length, 
+-- 		genre_id, category_id, rating, notes)
+-- Set most appropriate data types for each column. 
+-- Set primary key to each table. 
+-- Populate each table with 5 records.
+-- Make sure the columns that are present in 2 tables would be of the same data type.
+-- Consider which fields are always required and which are optional.
+-- Submit your CREATE TABLE and INSERT statements
+
+CREATE DATABASE `movies`;
+USE `movies`;
+
+CREATE TABLE `directors` (
+	`id` INT UNSIGNED PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT,
+    `director_name` VARCHAR(30) NOT NULL,
+    `notes` TEXT
+);
+
+CREATE TABLE `genres` (
+	`id` INT UNSIGNED PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT,
+    `genre_name` VARCHAR(30) NOT NULL,
+    `notes` TEXT
+);
+
+CREATE TABLE `categories` (
+	`id` INT UNSIGNED PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT,
+    `category_name` VARCHAR(30) NOT NULL,
+    `notes` TEXT
+);
+
+CREATE TABLE `movies` (
+	`id` INT UNSIGNED PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT,
+    `title` VARCHAR(30) NOT NULL,
+    `director_id` INT UNSIGNED NOT NULL,
+    `copyright_year` YEAR NOT NULL,
+    `length` TIME NOT NULL,
+    `genre_id` INT UNSIGNED NOT NULL,
+    `category_id` INT UNSIGNED NOT NULL,
+    `rating` DOUBLE NOT NULL DEFAULT 0,
+    `notes` TEXT
+);
+
+INSERT INTO `movies`
+	(`id`, `title`, `director_id`, `copyright_year`, `length`, `genre_id`, `category_id`)
+VALUES
+	(11,"kamen",2,'2016',23,1,2),
+	(10,"kamen",2,'2016',23,1,2),
+	(13,"kamen",2,'2016',23,1,2),
+	(14,"kamen",2,'2016',23,1,2),
+	(15,"kamen",1,'2016',23,1,2);
+
+INSERT INTO `directors`
+	(`id`, `director_name`, `notes`)
+VALUES
+	(1,'dasdasd','fasdfasdfasdfa'),
+    (2,'dasdasd','fasdfasdfasdfa'),
+    (3,'dasdasd','fasdfasdfasdfa'),
+    (4,'dasdasd','fasdfasdfasdfa'),
+    (5,'dasdasd','fasdfasdfasdfa');
+
+INSERT INTO `categories`
+	(`id`, `category_name`)
+VALUES
+	(1,'wi-fi'),
+	(2,'wi-fi'),
+	(3,'wi-fi'),
+	(4,'wi-fi'),
+	(5,'wi-fi');
+
+INSERT INTO `genres`
+	( `id`, `genre_name`, `notes`)
+VALUES
+	(2,'dasdad','kaman'),
+    (1,'dasdad','kaman'),
+    (3,'dasdad','kaman'),
+    (4,'dasdad','kaman'),
+    (5,'dasdad','kaman');
+    
+
+-- 13. Car Rental Database
+-- Using SQL queries create car_rental database with the following entities:
+-- * categories (id, category, daily_rate, weekly_rate, monthly_rate, weekend_rate)
+-- * cars (id, plate_number, make, model, car_year, category_id, 
+-- 		doors, picture, car_condition, available)
+-- * employees (id, first_name, last_name, title, notes)
+-- * customers (id, driver_licence_number, full_name, address, city, zip_code, notes)
+-- * rental_orders (id, employee_id, customer_id, car_id, car_condition, tank_level, 
+-- 		kilometrage_start, kilometrage_end, total_kilometrage, start_date, end_date, 
+-- 		total_days, rate_applied, tax_rate, order_status, notes)
+-- Set most appropriate data types for each column. 
+-- Set primary key to each table. 
+-- Populate each table with 3 records.
+-- Make sure the columns that are present in 2 tables would be of the same data type.
+--  Consider which fields are always required and which are optional. 
+-- Submit your CREATE TABLE and INSERT statements 

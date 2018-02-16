@@ -48,9 +48,9 @@ ALTER TABLE `minions`
 -- Populate both tables with sample records given in the table below.
 -- minions								towns
 -- id	name		age	town_id		id	name
--- 1	Kevin		22		1				1	Sofia
--- 2	Bob		15		3				2	Plovdiv
--- 3	Steward	NULL 	2				3	Varna
+-- 1	Kevin		22		1		1	Sofia
+-- 2	Bob			15		3		2	Plovdiv
+-- 3	Steward		NULL 	2		3	Varna
 -- Use only insert SQL queries.
 
 INSERT INTO `towns`(`id`, `name`)
@@ -371,3 +371,332 @@ INSERT INTO `rental_orders`
 		(1, 3, 2, 'Good', NOW()),
 		(2, 1, 3, 'Bad', NOW()),
 		(3, 2, 1, 'OK', NOW());
+
+
+-- 14. Hotel Database
+-- Using SQL queries create Hotel database with the following entities:
+-- * employees (id, first_name, last_name, title, notes)
+-- * customers (account_number, first_name, last_name, 
+-- 		phone_number, emergency_name, emergency_number, notes)
+-- * room_status (room_status, notes)
+-- * room_types (room_type, notes)
+-- * bed_types (bed_type, notes)
+-- * rooms (room_number, room_type, bed_type, rate, room_status, notes)
+-- * payments (id, employee_id, payment_date, account_number, 
+-- 		first_date_occupied, last_date_occupied, total_days, 
+-- 		amount_charged, tax_rate, tax_amount, payment_total, notes)
+-- * occupancies (id, employee_id, date_occupied, account_number,
+-- 		room_number, rate_applied, phone_charge, notes)
+-- Set most appropriate data types for each column. 
+-- Set primary key to each table. 
+-- Populate each table with 3 records.
+-- Make sure the columns that are present in 2 tables would be of the same data type. 
+-- Consider which fields are always required and which are optional.
+-- Submit your CREATE TABLE and INSERT statements
+
+CREATE DATABASE `hotel`;
+USE `hotel`;
+
+CREATE TABLE `employees` (
+	`id` INT UNSIGNED PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT,
+    `first_name` VARCHAR(30) NOT NULL,
+    `last_name` VARCHAR(30) NOT NULL,
+    `title` VARCHAR(30) NOT NULL,
+    `notes` VARCHAR(128)
+);
+
+INSERT INTO `employees`
+		(`first_name`, `last_name`, `title`, `notes`)
+	VALUES 
+		('Gosho', 'Goshev', 'Boss', ''),
+		('Pesho', 'Peshev', 'Supervisor', ''),
+		('Bai', 'Ivan', 'Worker', 'Can do any work');
+
+CREATE TABLE `customers` (
+	`account_number` INT UNSIGNED PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT,
+    `first_name` VARCHAR(30) NOT NULL,
+    `last_name` VARCHAR(30) NOT NULL,
+    `phone_number` VARCHAR(20) NOT NULL,
+    `emergency_name` VARCHAR(50),
+    `emergency_number` VARCHAR(20),
+    `notes` VARCHAR(128)
+);
+
+INSERT INTO `customers`
+		(`first_name`, `last_name`, `phone_number`)
+	VALUES 
+		('Gosho', 'Goshev', '123'),
+		('Pesho', 'Peshev', '44-2432'),
+		('Bai', 'Ivan', '007');
+
+CREATE TABLE `room_status` (
+    `room_status` INT UNSIGNED PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT,
+    `notes` VARCHAR(128)
+);
+
+INSERT INTO `room_status` 
+		(`notes`)
+	VALUES 
+		('Free'),
+		('For clean'),
+		('Occupied');
+        
+CREATE TABLE `room_types` (
+    `room_type` INT UNSIGNED PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT,
+    `notes` VARCHAR(128)
+);
+
+INSERT INTO `room_types` 
+		(`notes`)
+	VALUES 
+		('Small'),
+		('Medium'),
+		('Appartment');
+
+
+CREATE TABLE `bed_types` (
+    `bed_type` INT UNSIGNED PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT,
+    `notes` VARCHAR(128)
+);
+
+INSERT INTO `bed_types` 
+		(`notes`)
+	VALUES 
+		('Single'),
+		('Double'),
+		('Water-filled');
+        
+CREATE TABLE `rooms` (
+	`room_number` INT UNSIGNED PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT,
+    `room_type` INT UNSIGNED NOT NULL,
+    `bed_type` INT UNSIGNED NOT NULL,
+    `rate` DOUBLE DEFAULT 0,
+    `room_status` INT UNSIGNED NOT NULL,
+    `notes` VARCHAR(128)
+);
+
+INSERT INTO `rooms` 
+		(`room_type`, `bed_type`, `room_status`)
+	VALUES 
+		(1, 1, 1),
+		(2, 2, 2),
+		(3, 3, 3);
+
+CREATE TABLE `payments` (
+	`id` INT UNSIGNED PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT,
+    `employee_id` INT UNSIGNED NOT NULL,
+    `payment_date` DATE NOT NULL,
+    `account_number` INT UNSIGNED NOT NULL,
+    `first_date_occupied` DATE,
+    `last_date_occupied` DATE,
+    `total_days` INT UNSIGNED,
+    `amount_charged` DOUBLE,
+    `tax_rate` DOUBLE,
+    `tax_amount` DOUBLE,
+    `payment_total` DOUBLE,
+    `notes` VARCHAR(128)
+);
+
+INSERT INTO `payments` 
+		(`employee_id`, `payment_date`, `account_number`)
+	VALUES 
+		(1, DATE(NOW()), 1),
+		(2, DATE(NOW()), 2),
+		(3, DATE(NOW()), 3);
+
+
+CREATE TABLE `occupancies` (
+	`id` INT UNSIGNED PRIMARY KEY NOT NULL UNIQUE AUTO_INCREMENT,
+    `employee_id` INT UNSIGNED NOT NULL,
+    `date_occupied` DATE NOT NULL,
+    `account_number` INT UNSIGNED NOT NULL,
+    `room_number` INT UNSIGNED NOT NULL,
+    `rate_applied` DOUBLE,
+    `phone_charge` DOUBLE,
+    `notes` VARCHAR(128)
+);
+
+INSERT INTO `occupancies` 
+		(`employee_id`, `date_occupied`, `account_number`, `room_number`)
+	VALUES 
+		(1, DATE(NOW()), 1, 1),
+		(2, DATE(NOW()), 2, 2),
+		(3, DATE(NOW()), 3, 3);
+
+
+-- 15. Create SoftUni Database
+-- Now create bigger database called soft_uni. You will use database in the future tasks. It should hold information about
+-- * towns (id, name)
+-- * addresses (id, address_text, town_id)
+-- * departments (id, name)
+-- * employees (id, first_name, middle_name, last_name, job_title, department_id, hire_date, salary, address_id)
+-- Id columns are auto incremented starting from 1 and increased by 1 (1, 2, 3, 4…). 
+-- Make sure you use appropriate data types for each column. 
+-- Add primary and foreign keys as constraints for each table. 
+-- Use only SQL queries. 
+-- Consider which fields are always required and which are optional. 
+-- Submit your CREATE TABLE  statements
+
+CREATE DATABASE `soft_uni`;
+USE `soft_uni`;
+
+CREATE TABLE `towns` (
+	`id` INT UNSIGNED NOT NULL UNIQUE AUTO_INCREMENT,
+    `name` VARCHAR(30) NOT NULL, 
+    CONSTRAINT `pk_towns` PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `addresses` (
+	`id` INT UNSIGNED NOT NULL UNIQUE AUTO_INCREMENT,
+    `address_text` VARCHAR(30) NOT NULL,
+    `town_id` INT UNSIGNED,
+    CONSTRAINT `pk_addresses` PRIMARY KEY (`id`),
+    CONSTRAINT `fk_addresses_towns` FOREIGN KEY (`town_id`) REFERENCES `towns`(`id`)
+);
+
+CREATE TABLE `departments` (
+	`id` INT UNSIGNED NOT NULL UNIQUE AUTO_INCREMENT,
+    `name` VARCHAR(30) NOT NULL,
+    CONSTRAINT `pk_departments` PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `employees` (
+	`id` INT UNSIGNED NOT NULL UNIQUE AUTO_INCREMENT,
+    `first_name` VARCHAR(30) NOT NULL,
+    `middle_name` VARCHAR(30),
+    `last_name` VARCHAR(30) NOT NULL,
+    `job_title` VARCHAR(30) NOT NULL,
+    `department_id` INT UNSIGNED,
+    `hire_date` DATE,
+    `salary` DECIMAL(10, 2),
+    `address_id` INT UNSIGNED,
+    CONSTRAINT `pk_employees` PRIMARY KEY (`id`),
+    CONSTRAINT `fk_employees_departments` FOREIGN KEY (`department_id`) REFERENCES `departments`(`id`),
+    CONSTRAINT `fk_employees_addresses` FOREIGN KEY (`address_id`) REFERENCES `addresses`(`id`)
+);
+
+
+-- 16. Backup Database
+-- By using mysqldump command from MySql command line make a backup of the database soft_uni, 
+-- from the previous tasks, into a file named “softuni-backup.sql”. Drop your database from 
+-- Heidi or MySQL Workbench. Then restore the database from the created backup file by using 
+-- mysql command line.
+
+-- Execute in command line:
+-- mysqldump -u <user> -p<password> soft_uni > softuni-backup.sql
+
+DROP DATABASE `soft_uni`;
+
+-- Add following lines on top of softuni-backup.sql:
+-- DROP DATABASE IF EXISTS `soft_uni`;
+-- CREATE DATABASE `soft_uni`;
+-- USE `soft_uni`;
+
+-- Execute in command line:
+-- mysql -u <user> -p<password> < softuni-backup.sql
+
+
+-- 17. Basic Insert
+-- Use the SoftUni database and insert some data using SQL queries.
+-- towns: Sofia, Plovdiv, Varna, Burgas
+-- departments: Engineering, Sales, Marketing, Software Development, Quality Assurance
+-- employees:
+-- 	name					job_title		department				hire_date	salary
+-- 	Ivan Ivanov Ivanov		.NET Developer	Software Development	01/02/2013	3500.00
+-- 	Petar Petrov Petrov		Senior Engineer	Engineering				02/03/2004	4000.00
+-- 	Maria Petrova Ivanova	Intern			Quality Assurance		28/08/2016	525.25
+-- 	Georgi Terziev Ivanov	CEO				Sales					09/12/2007	3000.00
+-- 	Peter Pan Pan			Intern			Marketing				28/08/2016	599.88
+
+INSERT INTO `towns` 
+		(`name`) 
+	VALUES
+		('Sofia'),
+		('Plovdiv'),
+		('Varna'),
+		('Burgas');
+        
+INSERT INTO `departments` 
+		(`name`) 
+	VALUES
+		('Engineering'),
+		('Sales'),
+		('Marketing'),
+		('Software Development'),
+		('Quality Assurance');
+    
+INSERT INTO `employees`
+		(`first_name`, `middle_name`, `last_name`, `job_title`, `department_id`, `hire_date`, `salary`)
+	VALUES
+		('Ivan', 'Ivanov', 'Ivanov', '.NET Developer', 4, '2013-02-01', 3500.00),
+		('Petar', 'Petrov', 'Petrov', 'Senior Engineer', 1, '2004-03-02', 4000.00),
+		('Maria', 'Petrova', 'Ivanova', 'Intern', 5, '2016-08-28', 525.25),
+		('Georgi', 'Terziev', 'Ivanov', 'CEO', 2, '2007-12-09', 3000.00),
+		('Peter', 'Pan', 'Pan', 'Intern', 3, '2016-08-28', 599.88);
+
+
+-- 18. Basic Select All Fields
+-- Use the soft_uni database and first select all records from the towns, 
+-- then from departments and finally from employees table. 
+-- Use SQL queries and submit them to Judge at once.
+
+USE `soft_uni`;
+
+SELECT * FROM `towns`;
+SELECT * FROM `departments`;
+SELECT * FROM `employees`;
+
+
+-- 19. Basic Select All Fields and Order Them
+-- Modify queries from previous problem by sorting:
+-- towns - alphabetically by name
+-- departments - alphabetically by name
+-- employees - descending by salary
+
+SELECT * FROM `towns` ORDER BY `name`;
+SELECT * FROM `departments` ORDER BY `name`;
+SELECT * FROM `employees` ORDER BY `salary` DESC;
+
+
+-- 20. Basic Select Some Fields
+-- Modify queries from previous problem to show only some of the columns. For table:
+-- towns – name
+-- departments – name
+-- employees – first_name, last_name, job_title, salary
+-- Keep the ordering from the previous problem.
+
+SELECT `name` FROM `towns` ORDER BY `name`;
+SELECT `name` FROM `departments` ORDER BY `name`;
+SELECT 
+    `first_name`, `last_name`, `job_title`, `salary`
+FROM
+    `employees`
+ORDER BY `salary` DESC;
+
+
+-- 21. Increase Employees Salary
+-- Use softuni database and increase the salary of all employees by 10%. 
+-- Select only salary column from the employees table. 
+
+UPDATE `employees` 
+SET 
+    `salary` = `salary` * 1.1;
+
+SELECT `salary` FROM `employees`;
+
+
+-- 22. Decrease Tax Rate
+-- Use hotel database and decrease tax rate by 3% to all payments. 
+-- Select only tax_rate column from the payments table.
+
+UPDATE `payments` 
+SET 
+    `tax_rate` = `tax_rate` * 0.97;
+
+SELECT `tax_rate` FROM `payments`;
+
+
+-- 23. Delete All Records
+-- Use Hotel database and delete all records from the occupancies table. Use SQL query.
+
+DELETE FROM `occupancies`;

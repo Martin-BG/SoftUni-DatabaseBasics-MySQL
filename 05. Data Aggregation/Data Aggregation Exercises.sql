@@ -334,6 +334,22 @@ WHERE
     `row_number` = 3
 ORDER BY `department_id`;
 
+-- An inteligent solution: 
+-- https://softuni.bg/forum/14032/problem-18-3rd-highest-salary-judge#comment-60937
+SELECT 
+    `department_id`,
+    (SELECT DISTINCT
+            `e2`.`salary`
+        FROM
+            `employees` AS `e2`
+        WHERE
+            `e2`.`department_id` = `e1`.`department_id`
+        ORDER BY `e2`.`salary` DESC
+        LIMIT 2 , 1) AS `third_highest_salary`
+FROM
+    `employees` AS `e1`
+GROUP BY `department_id`
+HAVING `third_highest_salary` IS NOT NULL;
 
 -- 18. Salary Challenge
 -- Write a query that returns:

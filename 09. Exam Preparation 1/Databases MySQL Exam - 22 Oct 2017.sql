@@ -337,3 +337,187 @@ ORDER BY `name`;
 -- Round the average duration to the nearest smaller integer value.
 -- Order them by department name.
 
+
+SELECT 
+    d.name AS 'department_name',
+    IFNULL(FLOOR(AVG(DATEDIFF(r.close_date, r.open_date))),
+            'no info') AS 'average_duration'
+FROM
+    `reports` AS r
+        JOIN
+    `categories` AS c ON c.id = r.category_id
+        JOIN
+    `departments` AS d ON d.id = c.department_id
+GROUP BY d.id
+ORDER BY d.name;
+
+-- Another SELECT:
+SELECT 
+    d.name AS 'department_name',
+    IF(COUNT(r.close_date) = 0,
+        'no info',
+        CAST(FLOOR(AVG(DATEDIFF(r.close_date, r.open_date)))
+            AS CHAR)) AS 'average_duration'
+FROM
+    `reports` AS r
+        JOIN
+    `categories` AS c ON c.id = r.category_id
+        JOIN
+    `departments` AS d ON d.id = c.department_id
+GROUP BY d.id
+ORDER BY d.name;
+
+-- 16. Most Reported Category
+-- Select all departments with their categories where users have
+-- submitted a report. Show the distribution of reports among the
+-- categories of each department in percentages without decimal part.
+-- Order them by department name, then by category name and then
+-- by percentage (all in ascending order).
+
+SELECT 
+    d.name AS 'department_name',
+    c.name AS 'category_name',
+    ROUND((COUNT(r.id) / (SELECT 
+                COUNT(r1.id)
+            FROM
+                `reports` AS r1
+                    JOIN
+                `categories` AS c1 ON c1.id = r1.category_id
+                    JOIN
+                `departments` AS d1 ON d1.id = c1.department_id
+            WHERE
+                d1.id = d.id
+            GROUP BY d1.id)) * 100,
+        0) AS 'percentage'
+FROM
+    `reports` AS r
+        JOIN
+    `categories` AS c ON c.id = r.category_id
+        JOIN
+    `departments` AS d ON d.id = c.department_id
+GROUP BY d.id , c.id
+ORDER BY d.name , c.name , `percentage`;
+
+
+-- Section 4. Programmability (20 pts)
+
+-- 17. Get Reports
+-- Create a user defined function with the name
+-- udf_get_reports_count(employee_id INT, status_id INT)
+-- that receives an employee’s Id and a status Id returns the
+-- sum of the reports he is assigned to with the given status.
+
+-- Example usage:
+SELECT 
+    id,
+    first_name,
+    last_name,
+    UDF_GET_REPORTS_COUNT(id, 2) AS reports_count
+FROM
+    employees AS e
+ORDER BY e.id;
+
+
+CREATE FUNCTION udf_get_reports_count(employee_id INT, status_id INT)
+RETURNS INT
+RETURN (
+    SELECT COUNT(r.id) 
+    FROM `reports` AS r 
+    WHERE r.employee_id = employee_id 
+        AND r.status_id = status_id);
+
+
+-- 18. Assign Employee
+-- Create a user defined stored procedure with the name
+-- usp_assign_employee_to_report(employee_id INT, report_id INT)
+-- that receives an employee’s Id and a report’s Id and assigns
+-- the employee to the report only if the department of the employee
+-- and the department of the report’s category are the same.
+-- If the assigning is not successful rollback any changes and throw
+-- an exception with message:
+-- “Employee doesn't belong to the appropriate department!”
+
+-- Example usage:
+CALL usp_assign_employee_to_report(30, 1); -- Response: Employee doesn't belong to the appropriate department!
+
+CALL usp_assign_employee_to_report(17, 2);
+SELECT employee_id FROM reports WHERE id = 2; -- Response: 17
+
+DELIMITER $$
+CREATE PROCEDURE usp_assign_employee_to_report(employee_id INT, report_id INT)
+BEGIN
+	DECLARE employee_department_id INT DEFAULT (SELECT e.department_id FROM `employees` AS e WHERE e.id = employee_id);
+	DECLARE report_category_id INT DEFAULT (SELECT r.category_id FROM `reports` AS r WHERE r.id = report_id);
+	DECLARE category_department_id INT DEFAULT (SELECT c.department_id FROM `categories` AS c WHERE c.id = report_category_id);
+	
+	START TRANSACTION;
+    IF(employee_department_id != category_department_id) THEN
+        SIGNAL SQLSTATE '45000' 
+            SET MESSAGE_TEXT = 'Employee doesn\'t belong to the appropriate department!';
+        ROLLBACK;
+    ELSE
+        UPDATE `reports` AS r
+            SET r.employee_id = employee_id
+            WHERE r.id = report_id;
+        COMMIT;
+    END IF;
+END $$
+DELIMITER ;
+
+
+-- 19. Close Reports
+-- Create a trigger which changes the status_id to “completed”
+-- of each report after a close_date is entered for the report. 
+-- Example usage:
+
+UPDATE reports 
+SET 
+    close_date = NOW()
+WHERE
+    employee_id = 1;
+    
+-- Expected Response: 2 row(s) affected
+
+DELIMITER $$
+CREATE TRIGGER `tr_report_closed`
+BEFORE UPDATE ON `reports`
+FOR EACH ROW
+BEGIN
+    IF (ISNULL(OLD.close_date) <> ISNULL(NEW.close_date)) THEN
+        SET NEW.status_id = 3;
+    END IF;
+END $$
+DELIMITER ;
+
+
+-- Section 5. Bonus (10 pts)
+-- 20. Categories Revision
+-- Select all categories which have reports with status “waiting” or
+-- “in progress” and show their total number in the column “Reports Number”.
+-- In the third column fill the main status type of reports for the
+-- category (e.g. 2 reports with status “waiting” and 3 reports with
+-- status “in progress” result in value “in progress”).
+-- If they are equal just fill in “equal”.
+/* Example:
+category_name       reports_number  main_status
+Animal in Danger    1               in progress
+Art Events          2               equal
+Dangerous Building  1               waiting
+…                   …               …           */
+
+SELECT 
+    c.name AS 'category_name',
+    COUNT(r.id) AS 'reports_number',
+    IF(COUNT(IF(r.status_id = 1, 1, NULL)) = COUNT(IF(r.status_id = 2, 1, NULL)),
+        'equal',
+        IF(COUNT(IF(r.status_id = 1, 1, NULL)) > COUNT(IF(r.status_id = 2, 1, NULL)),
+            'waiting',
+            'in progress')) AS 'main_status'
+FROM
+    `categories` AS c
+        JOIN
+    `reports` AS r ON c.id = r.category_id
+WHERE
+    r.status_id IN (1 , 2)
+GROUP BY c.id
+ORDER BY c.name;

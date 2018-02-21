@@ -1,3 +1,5 @@
+-- https://judge.softuni.bg/Contests/Practice/Index/823#0
+
 CREATE DATABASE `report_service`;
 
 USE `report_service`;

@@ -1,0 +1,1 @@
+-- https://judge.softuni.bg/Contests/Practice/Index/671#0

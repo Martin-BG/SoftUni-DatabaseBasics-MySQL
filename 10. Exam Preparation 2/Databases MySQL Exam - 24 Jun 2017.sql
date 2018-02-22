@@ -320,3 +320,178 @@ ORDER BY s.id DESC;
 -- ORDER the results descending by maximum possible points, and ascending by contest id.
 -- Required Columns: id (contests), name (contests), maximum_points
 
+SELECT 
+    c.id, c.name, SUM(p.points) AS 'maximum_points'
+FROM
+    `contests` AS c
+        JOIN
+    `problems` AS p ON c.id = p.contest_id
+GROUP BY c.id
+ORDER BY `maximum_points` DESC , c.id;
+
+
+-- 14. Contestants Submissions
+-- Extract from the database, all of the contests and the COUNT of submissions
+-- in their problems (IF THERE ARE ANY). 
+-- Take ONLY the submissions which’s users are still PARTICIPATING in the contest.
+-- ORDER the results descending by count of submissions, and ascending by contest id.
+-- Required Columns: id (contests), name (contests), submissions
+
+SELECT 
+    c.id, c.name, COUNT(s.id) AS 'submissions'
+FROM
+    `contests` AS c
+        JOIN
+    `problems` AS p ON c.id = p.contest_id
+        JOIN
+    `submissions` AS s ON p.id = s.problem_id
+        JOIN
+    `users_contests` AS uc ON c.id = uc.contest_id
+WHERE
+    s.user_id = uc.user_id
+GROUP BY c.id
+ORDER BY `submissions` DESC , c.id;
+
+-- Solution with inner SELECT clause
+SELECT 
+    c.id, c.name, COUNT(s.id) AS 'submissions'
+FROM
+    `contests` AS c
+        JOIN
+    `problems` AS p ON c.id = p.contest_id
+        JOIN
+    `submissions` AS s ON p.id = s.problem_id
+WHERE
+    s.user_id IN (SELECT 
+            uc.user_id
+        FROM
+            `users_contests` AS uc
+        WHERE
+            c.id = uc.contest_id)
+GROUP BY c.id
+ORDER BY `submissions` DESC , c.id;
+
+
+-- 15. Login
+-- Create a stored procedure udp_login which accepts the following parameters:
+-- username, password
+-- And checks the following things:
+-- If the username does NOT exist in the users table:
+--  Throw an exception with error code ‘45000’ and message ‘Username does not exist!’.
+-- If the username exists, but the password is NOT the same:
+--  Throw an exception with error code ‘45000’ and message ‘Password is incorrect!’.
+-- If the username already exists in the logged_in_users table:
+--  Throw an exception with error code ‘45000’ and message ‘User is already logged in!’.
+-- If all checks pass, extract the id and the email of the corresponding user,
+-- from the users table and INSERT it into the logged_in_users table.
+
+-- Another way to check user's existence:
+--  IF username NOT IN (SELECT u.username FROM `users` S u) THEN ....
+
+DELIMITER $$
+CREATE PROCEDURE udp_login(username VARCHAR(30), password VARCHAR(30))
+BEGIN
+    IF ((SELECT u.id FROM `users` AS u WHERE u.username = username) IS NULL) THEN
+        SIGNAL SQLSTATE '45000' 
+            SET MESSAGE_TEXT = 'Username does not exist!';
+    ELSEIF ((SELECT u.id FROM `users` AS u WHERE u.username = username AND u.password = password) IS NULL) THEN
+        SIGNAL SQLSTATE '45000' 
+            SET MESSAGE_TEXT = 'Password is incorrect!';
+    ELSEIF ((SELECT l.id FROM `logged_in_users` AS l WHERE l.username = username) IS NOT NULL) THEN
+        SIGNAL SQLSTATE '45000' 
+            SET MESSAGE_TEXT = 'User is already logged in!';
+    ELSE
+        INSERT INTO `logged_in_users` SELECT * FROM `users` AS u WHERE u.username = username;
+    END IF;
+END $$
+DELIMITER ;
+
+CALL udp_login('d', 'doge');
+CALL udp_login('doge', 'd');
+CALL udp_login('doge', 'doge');
+CALL udp_login('doge', 'doge');
+
+
+-- 16. Evaluate Submission
+-- Create a stored procedure udp_evaluate which accepts the following
+-- parameters: id (submissions)
+-- And evaluates the points which a submission should earn based on its
+-- passed_tests and the tests and points of the problem it is submitted to.
+-- If there is NO submission with the given id:
+--  Throw an exception with error code ‘45000’ and message ‘Submission does not exist!’.
+-- If everything passes you should INSERT into the evaluated_submissions table
+-- the submission, with its given id, the problem’s name, the user’s username
+-- and the result of the submission.
+-- The result of the submission is calculated by the following formula:
+--  {problem.points} / {problem.tests} * {submission.passed_tests}
+-- ROUND the resulting value UP.
+-- The problem being the corresponding problem to which the submission is submitted. 
+
+DELIMITER $$
+CREATE PROCEDURE udp_evaluate(id INT(11))
+BEGIN
+    IF ((SELECT s.id FROM `submissions` AS s WHERE s.id = id) IS NULL) THEN
+        SIGNAL SQLSTATE '45000' 
+            SET MESSAGE_TEXT = 'Submission does not exist!';
+    ELSE
+        INSERT INTO `evaluated_submissions`
+            SELECT 
+                s.id,
+                p.name,
+                u.username,
+                CEIL(p.points / p.tests * s.passed_tests)
+            FROM
+                (SELECT 
+                    *
+                FROM
+                    `submissions` AS s1
+                WHERE
+                    s1.id = id) AS s
+                    JOIN
+                `problems` AS p ON s.problem_id = p.id
+                    JOIN
+                `users` AS u ON s.user_id = u.id;
+    END IF;
+END $$
+DELIMITER ;
+
+CALL udp_evaluate(1);
+
+
+-- Section 5: Bonus – 20 pts
+
+-- 17. Check Constraint
+-- Create a trigger, that will help you INSERT more adequate values into the problems table. 
+-- Upon the insertion of a record into the problems table, the
+-- trigger should check the following things:
+-- * If the given name does NOT contain at least ONE space (' '):
+--    Throw an exception with error code '45000’' and message
+--      'The given name is invalid!'
+-- * If the given points are LESS THAN or EQUAL to 0:
+--    Throw an exception with error code '45000' and message
+--      'The problem's points cannot be less or equal to 0!'
+-- * If the given tests are LESS THAN or EQUAL to 0:
+--    Throw an exception with error code '45000' and message
+--      'The problem's tests cannot be less or equal to 0!'
+-- If all checks pass successfully, the record should be successfully
+-- inserted into the table problems.
+-- Submit ONLY the trigger code.
+-- The name of the trigger can be anything.
+
+DELIMITER $$
+CREATE TRIGGER `tr_problems`
+BEFORE INSERT ON `problems`
+FOR EACH ROW
+BEGIN
+    IF (CHAR_LENGTH(NEW.name) - CHAR_LENGTH(REPLACE(NEW.name, ' ', ''))) < 1 THEN
+        SIGNAL SQLSTATE '45000' 
+            SET MESSAGE_TEXT = 'The given name is invalid!';
+    ELSEIF NEW.points <= 0 THEN
+        SIGNAL SQLSTATE '45000' 
+            SET MESSAGE_TEXT = 'The problem\'s points cannot be less or equal to 0!';
+    ELSEIF NEW.tests <= 0 THEN
+        SIGNAL SQLSTATE '45000' 
+            SET MESSAGE_TEXT = 'The problem\'s tests cannot be less or equal to 0!';
+    END IF;
+END $$
+DELIMITER ;

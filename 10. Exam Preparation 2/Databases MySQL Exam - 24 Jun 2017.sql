@@ -292,6 +292,27 @@ WHERE
         LIMIT 1)
 ORDER BY s.id DESC;
 
+-- Optimised solution
+SELECT 
+    s.id,
+    u.username,
+    p.name,
+    CONCAT_WS(' / ', s.passed_tests, p.tests)
+FROM
+    (SELECT 
+        uc.user_id
+    FROM
+        `users_contests` AS uc
+    GROUP BY uc.user_id
+    ORDER BY COUNT(uc.contest_id) DESC
+    LIMIT 1) AS m
+        JOIN
+    `submissions` AS s ON s.user_id = m.user_id
+        JOIN
+    `problems` AS p ON s.problem_id = p.id
+        JOIN
+    `users` AS u ON u.id = s.user_id
+ORDER BY s.id DESC;
 
 -- 13. Contests Maximum Points
 -- Extract from the database, all contests. For each contest, extract the
